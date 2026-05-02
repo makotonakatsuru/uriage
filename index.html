@@ -147,7 +147,7 @@ input[type=number]{-moz-appearance:textfield}
 .db{background:none;border:none;cursor:pointer;font-size:18px;color:#bbb;padding:0 4px;line-height:1}
 .db:hover{color:var(--r)}
 .em{font-size:13px;color:#aaa;text-align:center;padding:10px 0}
-/* 仕入れ先ピッカー */
+/* 経費先ピッカー */
 .supplier-picker-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:1100}
 .supplier-picker-overlay.show{display:block}
 .supplier-picker{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:16px 16px 32px;max-height:65vh;overflow-y:auto;max-width:480px;margin:0 auto}
@@ -269,7 +269,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
     <div class="settings-overlay" id="settings-overlay" onclick="closeSettings()">
       <div class="settings-menu" onclick="event.stopPropagation()">
         <div class="settings-item" onclick="openFixedModal();closeSettings()"><span class="settings-icon">🔄</span>固定費・売上の設定</div>
-        <div class="settings-item" onclick="openSupplierModal();closeSettings()"><span class="settings-icon">🏭</span>仕入れ先の管理</div>
+        <div class="settings-item" onclick="openSupplierModal();closeSettings()"><span class="settings-icon">🏭</span>経費先の管理</div>
         <div class="settings-item" onclick="document.getElementById('import-file').click();closeSettings()"><span class="settings-icon">📥</span>CSVインポート</div>
         <input type="file" id="import-file" accept=".csv" style="display:none" onchange="importCSV(event)">
         <div class="settings-item" onclick="exportCSV();closeSettings()"><span class="settings-icon">📤</span>CSVエクスポート</div>
@@ -303,7 +303,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
           <button class="add-btn" id="add-btn" onclick="addRecord()">追加</button>
         </div>
         <div class="formrow">
-          <input type="text" id="note" placeholder="仕入れ先・備考" style="flex:1;font-size:15px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:#222;font-family:inherit">
+          <input type="text" id="note" placeholder="経費先・備考" style="flex:1;font-size:15px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:#222;font-family:inherit">
           <button type="button" onclick="openSupplierPicker()" style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:18px;cursor:pointer;flex-shrink:0">🏭</button>
         </div>
       </div>
@@ -397,7 +397,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
         <input type="number" id="edit-amount" style="width:100%;font-size:15px;padding:9px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box">
       </div>
       <div style="margin-bottom:12px">
-        <div style="font-size:12px;color:#888;margin-bottom:4px">仕入れ先・備考</div>
+        <div style="font-size:12px;color:#888;margin-bottom:4px">経費先・備考</div>
         <input type="text" id="edit-note" style="width:100%;font-size:15px;padding:9px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;font-family:inherit">
       </div>
       <div style="margin-bottom:16px">
@@ -429,7 +429,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
           <input type="number" id="fixed-amount" placeholder="金額（円）" style="flex:1;font-size:15px;padding:9px;border:1px solid var(--border);border-radius:8px">
           <select id="fixed-day" style="font-size:15px;padding:9px;border:1px solid var(--border);border-radius:8px"></select>
         </div>
-        <input type="text" id="fixed-note" placeholder="仕入れ先・備考（例：倉庫代）" style="width:100%;font-size:15px;padding:9px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;margin-bottom:8px;font-family:inherit">
+        <input type="text" id="fixed-note" placeholder="経費先・備考（例：倉庫代）" style="width:100%;font-size:15px;padding:9px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;margin-bottom:8px;font-family:inherit">
         <div style="margin-bottom:12px">
           <div style="font-size:12px;color:#888;margin-bottom:4px">開始年月</div>
           <div style="display:flex;gap:6px">
@@ -450,11 +450,11 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
   </div>
 </div>
 
-<!-- 仕入れ先管理モーダル -->
+<!-- 経費先管理モーダル -->
 <div class="modal-overlay" id="supplier-modal" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">🏭 仕入れ先の管理</div>
+      <div class="modal-title">🏭 経費先の管理</div>
       <button class="modal-close" onclick="document.getElementById('supplier-modal').classList.remove('show')">✕</button>
     </div>
     <div class="modal-body" style="padding:12px 16px">
@@ -462,7 +462,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
       <div style="border-top:1px solid var(--border);padding-top:12px">
         <div style="font-size:12px;color:#888;margin-bottom:6px">新しく追加</div>
         <div style="display:flex;gap:8px">
-          <input type="text" id="supplier-input" placeholder="例：ヤフオク、メルカリ仕入れ" style="flex:1;font-size:15px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;font-family:inherit">
+          <input type="text" id="supplier-input" placeholder="例：ヤフオク、メルカリ経費" style="flex:1;font-size:15px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;font-family:inherit">
           <button onclick="addSupplier()" style="padding:9px 16px;background:var(--p);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">追加</button>
         </div>
       </div>
@@ -470,11 +470,11 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
   </div>
 </div>
 
-<!-- 仕入れ先ピッカー -->
+<!-- 経費先ピッカー -->
 <div class="supplier-picker-overlay" id="supplier-picker-overlay" onclick="closeSupplierPicker()">
   <div class="supplier-picker" onclick="event.stopPropagation()">
     <div class="supplier-picker-hd">
-      <span class="supplier-picker-title">🏭 仕入れ先を選択</span>
+      <span class="supplier-picker-title">🏭 経費先を選択</span>
       <button onclick="closeSupplierPicker()" style="background:none;border:none;font-size:20px;color:#aaa;cursor:pointer;padding:0">✕</button>
     </div>
     <div id="supplier-picker-list"></div>
@@ -504,15 +504,15 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
       <div style="display:flex;flex-direction:column;gap:10px">
         <div style="background:#dbeafe;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">📝 記録の追加</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">カレンダーの日付をタップして選択し、売上/仕入・カテゴリ・金額・仕入れ先を入力して「追加」を押します。</div>
+          <div style="font-size:13px;color:#555;line-height:1.8">カレンダーの日付をタップして選択し、売上/仕入・カテゴリ・金額・経費先を入力して「追加」を押します。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">💹 粗利・利益率</div>
           <div style="font-size:13px;color:#555;line-height:1.8">上部バーに売上・仕入・粗利・利益率を常時表示。利益率は30%以上で緑、10〜30%で黄、10%未満で赤になります。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px">🏭 仕入れ先の保存</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">設定→仕入れ先の管理でよく使う仕入れ先を登録。入力フォームの🏭ボタンからワンタップで入力できます。</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px">🏭 経費先の保存</div>
+          <div style="font-size:13px;color:#555;line-height:1.8">設定→経費先の管理でよく使う経費先を登録。入力フォームの🏭ボタンからワンタップで入力できます。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">🔄 固定費・売上の設定</div>
@@ -524,7 +524,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">📥📤 CSV インポート/エクスポート</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">エクスポートで全データをCSVとしてダウンロード。インポートは「日付,種別(売上/仕入),カテゴリ,金額,仕入れ先」の形式に対応しています。</div>
+          <div style="font-size:13px;color:#555;line-height:1.8">エクスポートで全データをCSVとしてダウンロード。インポートは「日付,種別(売上/仕入),カテゴリ,金額,経費先」の形式に対応しています。</div>
         </div>
         <div style="background:#fef3c7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">💡 便利な操作</div>
@@ -590,7 +590,7 @@ ALTER TABLE uriage_records ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "uriage_records_policy" ON uriage_records
   FOR ALL USING (auth.uid()=user_id) WITH CHECK (auth.uid()=user_id);
 
--- 2. 設定テーブル（仕入れ先・固定費）
+-- 2. 設定テーブル（経費先・固定費）
 CREATE TABLE IF NOT EXISTS uriage_settings (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   suppliers jsonb DEFAULT '[]',
@@ -1078,7 +1078,7 @@ function openSupplierModal(){
 
 async function addSupplier(){
   const val=document.getElementById('supplier-input').value.trim();
-  if(!val){showToast('仕入れ先名を入力してください','warn');return;}
+  if(!val){showToast('経費先名を入力してください','warn');return;}
   if(suppliers.includes(val)){showToast('すでに登録済みです','warn');return;}
   suppliers.push(val);
   await saveSettings();
@@ -1095,7 +1095,7 @@ async function deleteSupplier(name){
 
 function renderSupplierList(){
   const el=document.getElementById('supplier-list');
-  if(!suppliers.length){el.innerHTML='<div class="em">仕入れ先が登録されていません</div>';return;}
+  if(!suppliers.length){el.innerHTML='<div class="em">経費先が登録されていません</div>';return;}
   el.innerHTML='';
   suppliers.forEach(s=>{
     const div=document.createElement('div');
@@ -1107,7 +1107,7 @@ function renderSupplierList(){
 
 function openSupplierPicker(){
   const list=document.getElementById('supplier-picker-list');
-  if(!suppliers.length){list.innerHTML='<div class="supplier-empty">仕入れ先が登録されていません<br><small>設定→仕入れ先の管理から追加できます</small></div>';}
+  if(!suppliers.length){list.innerHTML='<div class="supplier-empty">経費先が登録されていません<br><small>設定→経費先の管理から追加できます</small></div>';}
   else{
     list.innerHTML='';
     suppliers.forEach(s=>{
@@ -1126,7 +1126,7 @@ function closeSupplierPicker(){document.getElementById('supplier-picker-overlay'
 function exportCSV(){
   if(!annualData.length){showToast('データがありません','warn');return;}
   const rows=annualData.map(r=>`${r.date},${r.type==='sale'?'売上':'仕入'},${r.category},${r.amount},"${(r.note||'').replace(/"/g,'""')}"`);
-  const blob=new Blob(['﻿日付,種別,カテゴリ,金額,仕入れ先\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const blob=new Blob(['﻿日付,種別,カテゴリ,金額,経費先\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='uriage_'+vy+'.csv';a.click();
   URL.revokeObjectURL(url);
