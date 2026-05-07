@@ -648,6 +648,8 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 </div>
 
 <script>
+const APP_VERSION='1.0.1';
+const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
 const TABLE='uriage_records';
@@ -913,6 +915,38 @@ async function startApp(){
   initSwipe();
   setTopbarHeight();
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  checkVersion();
+}
+async function checkVersion(){
+  try{
+    let r=await fetch(VERSION_URL+'?t='+Date.now());
+    if(!r.ok)return;
+    let d=await r.json();
+    if(d.version&&d.version!==APP_VERSION&&d.version!==localStorage.getItem('ur_ver_ack')){
+      showVersionBanner(d.version);
+    }
+  }catch(e){}
+}
+async function doUpdate(ver){
+  localStorage.setItem('ur_ver_ack',ver);
+  try{
+    if('caches' in window){const keys=await caches.keys();await Promise.all(keys.map(k=>caches.delete(k)));}
+    if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.unregister()));}
+  }catch(e){}
+  location.reload();
+}
+function showVersionBanner(newVer){
+  let existing=document.getElementById('version-banner');
+  if(existing)existing.remove();
+  let b=document.createElement('div');
+  b.id='version-banner';
+  b.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:2000;background:#1e40af;color:#fff;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;box-shadow:0 -2px 12px rgba(0,0,0,0.15)';
+  b.innerHTML=`<span>🆕 アップデートがあります (v${newVer})</span>`+
+    `<div style="display:flex;gap:8px">`+
+    `<button onclick="doUpdate('${newVer}')" style="background:#fff;color:#1e40af;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">更新</button>`+
+    `<button onclick="document.getElementById('version-banner').remove()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit">後で</button>`+
+    `</div>`;
+  document.body.appendChild(b);
 }
 
 function setTopbarHeight(){
