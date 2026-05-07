@@ -795,7 +795,8 @@ async function doLogin(){
     if(!r.ok){document.getElementById('auth-err').textContent=d.error_description||'ログインに失敗しました';return;}
     accessToken=d.access_token;refreshToken=d.refresh_token;userId=d.user.id;
     localStorage.setItem('ur_token',accessToken);localStorage.setItem('ur_refresh',refreshToken);
-    userName=d.user.user_metadata?.name||email.split('@')[0];
+    userName=localStorage.getItem('ur_name_'+userId)||d.user.user_metadata?.name||email.split('@')[0];
+    localStorage.setItem('ur_name_'+userId,userName);
     startApp();
   }catch(e){document.getElementById('auth-err').textContent='通信エラーが発生しました';}
   finally{btn.disabled=false;btn.textContent='ログイン';}
@@ -846,7 +847,7 @@ async function tryAutoLogin(){
   try{
     let r=await apiFetch(SU+'/auth/v1/user',{headers:H()});
     if(!r.ok&&refresh){await refreshAT();r=await apiFetch(SU+'/auth/v1/user',{headers:H()});}
-    if(r.ok){const d=await r.json();userId=d.id;userName=d.user_metadata?.name||d.email.split('@')[0];return true;}
+    if(r.ok){const d=await r.json();userId=d.id;userName=localStorage.getItem('ur_name_'+d.id)||d.user_metadata?.name||d.email.split('@')[0];localStorage.setItem('ur_name_'+userId,userName);return true;}
   }catch(e){}
   return false;
 }
@@ -854,16 +855,10 @@ async function tryAutoLogin(){
 async function changeName(){
   const name=prompt('新しい名前を入力してください',userName);
   if(!name||!name.trim())return;
-  try{
-    const r=await apiFetch(SU+'/auth/v1/user',{
-      method:'PUT',headers:H(),
-      body:JSON.stringify({data:{name:name.trim()}})
-    });
-    if(!r.ok)throw new Error();
-    userName=name.trim();
-    document.getElementById('user-name-display').textContent=userName;
-    showToast('名前を変更しました','ok');
-  }catch(e){showToast('変更に失敗しました','err');}
+  userName=name.trim();
+  localStorage.setItem('ur_name_'+userId,userName);
+  document.getElementById('user-name-display').textContent=userName;
+  showToast('名前を変更しました','ok');
 }
 
 async function changePassword(){
