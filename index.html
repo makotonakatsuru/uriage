@@ -257,7 +257,11 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
   <div class="wrap">
     <div class="topbar">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-        <span id="ylbl" onclick="toggleYearPicker()" style="font-size:13px;color:rgba(255,255,255,0.85);font-weight:600;cursor:pointer;padding:3px 7px;border-radius:8px;border:1px solid rgba(255,255,255,0.3)"></span>
+        <div style="display:flex;align-items:center;gap:2px">
+          <button onclick="changeYear(-1)" style="border:none;background:none;cursor:pointer;font-size:16px;color:rgba(255,255,255,0.7);padding:0 4px">‹</button>
+          <span id="ylbl" style="font-size:13px;color:rgba(255,255,255,0.85);font-weight:600;padding:3px 4px"></span>
+          <button onclick="changeYear(1)" style="border:none;background:none;cursor:pointer;font-size:16px;color:rgba(255,255,255,0.7);padding:0 4px">›</button>
+        </div>
         <span id="user-name-display" style="font-size:13px;color:rgba(255,255,255,0.85);font-weight:600"></span>
         <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
       </div>
@@ -372,7 +376,11 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
     <div class="annual-section">
       <div class="annual-header">
         <div class="annual-title">年間収支</div>
-        <div class="annual-year" id="annual-year" onclick="toggleYearPicker()"></div>
+        <div style="display:flex;align-items:center;gap:2px">
+          <button onclick="changeYear(-1)" style="border:none;background:none;cursor:pointer;font-size:16px;color:#888;padding:0 4px">‹</button>
+          <span id="annual-year" class="annual-year" style="cursor:default;border:none;padding:3px 4px"></span>
+          <button onclick="changeYear(1)" style="border:none;background:none;cursor:pointer;font-size:16px;color:#888;padding:0 4px">›</button>
+        </div>
       </div>
       <table class="annual-table">
         <thead><tr><th>月</th><th>売上</th><th>経費</th><th>粗利</th><th>利益率</th></tr></thead>
@@ -648,7 +656,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 </div>
 
 <script>
-const APP_VERSION='1.0.2';
+const APP_VERSION='1.0.3';
 const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
@@ -979,8 +987,12 @@ function changeMonth(d){
   updateTopbar();
   data=annualData.filter(x=>{const dt=new Date(x.date+'T00:00:00');return dt.getFullYear()===vy&&dt.getMonth()===vm;});
   renderCalendar();renderSummary();renderPieCharts();
-  // Load full year data if year changed
   if(!annualData.some(x=>x.date.startsWith(vy+'-'))){load();}
+}
+function changeYear(d){
+  vy+=d;
+  updateTopbar();
+  load();
 }
 
 function initCategories(selectId,type){
@@ -1993,24 +2005,7 @@ function showAddToHome(){document.getElementById('addtohome-modal').classList.ad
 function showSetupSQL(){document.getElementById('setup-sql').textContent=SETUP_SQL;document.getElementById('sql-modal').classList.add('show');}
 function copySQL(){navigator.clipboard.writeText(SETUP_SQL).then(()=>showToast('SQLをコピーしました','ok'));}
 
-// ---- Year/Month Pickers ----
-function toggleYearPicker(){
-  const ex=document.getElementById('year-picker-card');if(ex){ex.remove();return;}
-  const card=document.createElement('div');card.id='year-picker-card';
-  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  card.style.cssText=`position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:${isDark?'#1e1e1e':'#fff'};border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,0.2);padding:20px 24px;z-index:2000;text-align:center;min-width:180px`;
-  const yDisp=document.createElement('div');yDisp.style.cssText=`font-size:22px;font-weight:700;margin:8px 0;color:${isDark?'#e2e2e2':'#222'}`;yDisp.textContent=vy+'年';
-  const up=document.createElement('button');up.textContent='▲';up.style.cssText='font-size:18px;border:none;background:none;cursor:pointer;padding:8px 20px;color:#888';
-  const dn=document.createElement('button');dn.textContent='▼';dn.style.cssText='font-size:18px;border:none;background:none;cursor:pointer;padding:8px 20px;color:#888';
-  const ok=document.createElement('button');ok.textContent='確定';ok.style.cssText='display:block;width:100%;padding:10px;background:var(--p);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;font-family:inherit';
-  let ty=vy;
-  up.onclick=()=>{ty++;yDisp.textContent=ty+'年';};
-  dn.onclick=()=>{ty--;yDisp.textContent=ty+'年';};
-  ok.onclick=()=>{vy=ty;card.remove();updateTopbar();load();};
-  card.append(up,yDisp,dn,ok);document.body.appendChild(card);
-  setTimeout(()=>document.addEventListener('click',function h(e){if(!card.contains(e.target)){card.remove();document.removeEventListener('click',h);}},true),100);
-}
-
+// ---- Month Picker ----
 function toggleMonthPicker(){
   const ex=document.getElementById('month-picker-card');if(ex){ex.remove();return;}
   const card=document.createElement('div');card.id='month-picker-card';
