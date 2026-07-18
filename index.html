@@ -188,6 +188,7 @@ html[data-theme="dark"]{
 html[data-theme="dark"] body{background:#111;color:#e2e2e2}
 html[data-theme="dark"] .wrap{background:#111}
 html[data-theme="dark"] #auth-screen{background:#111}
+html[data-theme="dark"] #lock-screen{background:#111}
 html[data-theme="dark"] .auth-field input,
 html[data-theme="dark"] select,
 html[data-theme="dark"] input[type=number],
@@ -253,6 +254,16 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
   </div>
 </div>
 
+<!-- ロック画面（Face ID / Touch ID） -->
+<div id="lock-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;background:#fff">
+  <div style="font-size:48px;margin-bottom:12px">🔒</div>
+  <div style="font-size:20px;font-weight:700;color:#1e40af;margin-bottom:6px">ロック中</div>
+  <div style="font-size:13px;color:#888;margin-bottom:32px">Face ID / Touch IDで解除してください</div>
+  <button class="auth-btn" style="max-width:280px" onclick="unlockWithBiometric()">🔓 Face ID / Touch IDで解除</button>
+  <div id="lock-err" style="font-size:13px;color:var(--r);text-align:center;margin-top:14px;min-height:20px"></div>
+  <div style="margin-top:24px;font-size:12px;color:#aaa;cursor:pointer;text-decoration:underline" onclick="doLogout()">ログアウトしてやり直す</div>
+</div>
+
 <div id="app-screen">
   <div class="wrap">
     <div class="topbar">
@@ -293,6 +304,10 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
         <div class="settings-item" onclick="document.getElementById('import-file').click();closeSettings()"><span class="settings-icon">📥</span>CSVインポート</div>
         <input type="file" id="import-file" accept=".csv" style="display:none" onchange="importCSV(event)">
         <div class="settings-item" onclick="exportCSV();closeSettings()"><span class="settings-icon">📤</span>CSVエクスポート</div>
+        <label class="settings-item" for="biolock-toggle" style="cursor:pointer">
+          <span class="settings-icon">🔒</span><span style="flex:1">Face ID / Touch IDでロック</span>
+          <div class="toggle-switch"><input type="checkbox" id="biolock-toggle" onchange="toggleBioLock()"><div class="toggle-track"></div></div>
+        </label>
         <label class="settings-item" for="dark-toggle" style="cursor:pointer">
           <span class="settings-icon">🌙</span><span style="flex:1">ダークモード</span>
           <div class="toggle-switch"><input type="checkbox" id="dark-toggle" onchange="toggleDarkMode()"><div class="toggle-track"></div></div>
@@ -386,6 +401,22 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
         <thead><tr><th>月</th><th>売上</th><th>経費</th><th>粗利</th><th>利益率</th></tr></thead>
         <tbody id="annual-body"></tbody>
       </table>
+    </div>
+    <!-- 年間 取引先別合計 -->
+    <div class="chart-section" id="partner-section" style="border-top:1px solid var(--border);border-bottom:none">
+      <div class="chart-section-title">年間 取引先別合計（<span id="partner-year"></span>）</div>
+      <div class="charts-row">
+        <div class="chart-box">
+          <div class="chart-box-title sale"><span>売上先別</span><span id="partner-total-sale" style="font-size:15px;font-weight:700"></span></div>
+          <div class="chart-canvas-wrap"><canvas id="pie-partner-sale" width="160" height="160"></canvas></div>
+          <div class="legend" id="legend-partner-sale"></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-box-title buy"><span>仕入先・経費先別</span><span id="partner-total-buy" style="font-size:15px;font-weight:700"></span></div>
+          <div class="chart-canvas-wrap"><canvas id="pie-partner-buy" width="160" height="160"></canvas></div>
+          <div class="legend" id="legend-partner-buy"></div>
+        </div>
+      </div>
     </div>
     <div class="foot">売上・仕入管理</div>
   </div>
@@ -615,6 +646,10 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">💡 便利な操作</div>
           <div style="font-size:13px;color:#555;line-height:1.8"><strong>左右スワイプ</strong>で月を切り替え。<strong>月ラベル</strong>タップで月選択。<strong>年ラベル</strong>タップで年変更。記録をタップすると編集できます。</div>
         </div>
+        <div style="background:#dcfce7;border-radius:12px;padding:12px">
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px">🔒 Face ID / Touch IDロック</div>
+          <div style="font-size:13px;color:#555;line-height:1.8">設定→🔒Face ID / Touch IDでロックをONにすると、次回以降アプリを開くたびに生体認証で解除できます。対応端末でのみ利用でき、ONにした端末ごとの設定です。</div>
+        </div>
       </div>
     </div>
   </div>
@@ -656,7 +691,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 </div>
 
 <script>
-const APP_VERSION='1.0.3';
+const APP_VERSION='1.1.0';
 const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
@@ -730,6 +765,7 @@ let today=new Date(),vy=today.getFullYear(),vm=today.getMonth();
 let sel=fk(vy,vm,today.getDate());
 let data=[],annualData=[];
 let accessToken=null,refreshToken=null,userId=null,userName='';
+let _appLoaded=false;
 let suppliers=[],buyers=[],fixedItems=[],fixedApplied={};
 let editId=null,fixedType='buy';
 let _lastHidden=0;
@@ -785,6 +821,10 @@ document.addEventListener('visibilitychange',async()=>{
   if(document.visibilityState==='hidden'){_lastHidden=Date.now();return;}
   if(!userId)return;
   if(Date.now()-_lastHidden<60000)return;
+  if(isBioLockOn()&&document.getElementById('app-screen').style.display!=='none'){
+    lockApp();
+    return;
+  }
   await refreshAT();
   load();
 });
@@ -815,7 +855,7 @@ async function doLogin(){
     localStorage.setItem('ur_token',accessToken);localStorage.setItem('ur_refresh',refreshToken);
     userName=localStorage.getItem('ur_name_'+userId)||d.user.user_metadata?.name||email.split('@')[0];
     localStorage.setItem('ur_name_'+userId,userName);
-    startApp();
+    if(isBioLockOn()){lockApp();}else{startApp();}
   }catch(e){document.getElementById('auth-err').textContent='通信エラーが発生しました';}
   finally{btn.disabled=false;btn.textContent='ログイン';}
 }
@@ -838,7 +878,8 @@ async function doSignup(){
     if(d.access_token){
       accessToken=d.access_token;refreshToken=d.refresh_token;userId=d.user.id;
       localStorage.setItem('ur_token',accessToken);localStorage.setItem('ur_refresh',refreshToken);
-      userName=name;startApp();
+      userName=name;
+      if(isBioLockOn()){lockApp();}else{startApp();}
     } else {
       document.getElementById('auth-err').style.color='#16a34a';
       document.getElementById('auth-err').textContent='確認メールを送信しました。リンクをクリック後にログインしてください。';
@@ -849,10 +890,11 @@ async function doSignup(){
 
 async function doLogout(){
   try{await apiFetch(SU+'/auth/v1/logout',{method:'POST',headers:H()});}catch(e){}
-  accessToken=null;refreshToken=null;userId=null;userName='';
+  accessToken=null;refreshToken=null;userId=null;userName='';_appLoaded=false;
   localStorage.removeItem('ur_token');localStorage.removeItem('ur_refresh');
   data=[];annualData=[];suppliers=[];fixedItems=[];fixedApplied={};
   document.getElementById('app-screen').style.display='none';
+  document.getElementById('lock-screen').style.display='none';
   document.getElementById('auth-screen').style.display='flex';
 }
 
@@ -903,6 +945,7 @@ async function deleteAccount(){
     await apiFetch(SU+`/rest/v1/${STBL}?user_id=eq.${userId}`,{method:'DELETE',headers:H()});
     // Delete auth user
     await apiFetch(SU+'/auth/v1/user',{method:'DELETE',headers:H()});
+    localStorage.removeItem('ur_biolock');localStorage.removeItem('ur_webauthn_id');
     showToast('アカウントを削除しました','ok');
     setTimeout(doLogout,1500);
   }catch(e){showToast('削除に失敗しました','err');}
@@ -911,12 +954,14 @@ async function deleteAccount(){
 // ---- App Init ----
 async function startApp(){
   document.getElementById('auth-screen').style.display='none';
+  document.getElementById('lock-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
   document.getElementById('user-name-display').textContent=userName;
   const theme=localStorage.getItem('ur_theme');
   const dark=theme==='dark'||(theme===null&&window.matchMedia('(prefers-color-scheme: dark)').matches);
   document.getElementById('dark-toggle').checked=dark;
   if(dark)document.documentElement.setAttribute('data-theme','dark');
+  initBioLock();
   setType('sale');
   // 今日の日付を初期選択
   sel=fk(today.getFullYear(),today.getMonth(),today.getDate());
@@ -932,6 +977,7 @@ async function startApp(){
   setTopbarHeight();
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
   checkVersion();
+  _appLoaded=true;
 }
 async function checkVersion(){
   try{
@@ -1156,7 +1202,7 @@ async function load(){
     data=annualData.filter(x=>{const d=new Date(x.date+'T00:00:00');return d.getFullYear()===vy&&d.getMonth()===vm;});
     await applyFixedItems(vy,vm);
     ss('ok','同期済み');
-    renderCalendar();renderSummary();renderPieCharts();renderBarChart();renderAnnual();
+    renderCalendar();renderSummary();renderPieCharts();renderBarChart();renderAnnual();renderPartnerPies();
   }catch(e){
     if(!e.offline)ss('err','エラー');
     showToast('データ読み込みに失敗しました','err');
@@ -1817,6 +1863,86 @@ function openCatModal(kind,cat){
   document.getElementById('cat-modal').classList.add('show');
 }
 
+// 年間の取引先（備考欄の仕入先・売上先）別合計
+let _partnerPieData={sale:[],buy:[]};
+function partnerKey(r){const n=(r.note||'').trim();return n||'（未記入）';}
+
+function renderPartnerPies(){
+  const yEl=document.getElementById('partner-year');
+  if(yEl)yEl.textContent=vy+'年';
+  drawPartnerPie('pie-partner-sale','legend-partner-sale','partner-total-sale','sale',SALE_COLORS);
+  drawPartnerPie('pie-partner-buy','legend-partner-buy','partner-total-buy','buy',BUY_COLORS);
+}
+
+function drawPartnerPie(canvasId,legendId,totalId,type,colors){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const SZ=160;
+  canvas.style.width=SZ+'px';canvas.style.height=SZ+'px';
+  canvas.width=SZ*dpr;canvas.height=SZ*dpr;
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,SZ,SZ);
+  const map={};
+  annualData.filter(r=>r.type===type).forEach(r=>{
+    const k=partnerKey(r);
+    map[k]=(map[k]||0)+r.amount;
+  });
+  let sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  // 上位11件＋残りは「その他」にまとめる
+  let ents=sorted.slice(0,11).map(([k,v])=>({label:k,amount:v,keys:[k]}));
+  if(sorted.length>11){
+    const rest=sorted.slice(11);
+    ents.push({label:'その他',amount:rest.reduce((s,e)=>s+e[1],0),keys:rest.map(e=>e[0])});
+  }
+  _partnerPieData[type]=ents;
+  const total=ents.reduce((s,e)=>s+e.amount,0);
+  document.getElementById(totalId).textContent=total?fy(total):'';
+  const leg=document.getElementById(legendId);leg.innerHTML='';
+  if(!total){
+    ctx.fillStyle='#e8e8e8';ctx.beginPath();ctx.arc(SZ/2,SZ/2,SZ/2-10,0,Math.PI*2);ctx.fill();
+    leg.innerHTML='<div class="no-data">データなし</div>';return;
+  }
+  let angle=-Math.PI/2;
+  const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()||'#fff';
+  ents.forEach((e,i)=>{
+    const color=colors[i%colors.length];
+    const slice=e.amount/total*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(SZ/2,SZ/2);ctx.arc(SZ/2,SZ/2,SZ/2-8,angle,angle+slice);ctx.closePath();
+    ctx.fillStyle=color;ctx.fill();angle+=slice;
+  });
+  ctx.beginPath();ctx.arc(SZ/2,SZ/2,SZ/2-30,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+  ents.forEach((e,i)=>{
+    const color=colors[i%colors.length];
+    const pct=Math.round(e.amount/total*100);
+    const item=document.createElement('div');item.className='leg-item';
+    const lbl=document.createElement('span');lbl.className='leg-label';lbl.textContent=e.label;
+    item.innerHTML=`<div class="leg-row"><span class="leg-dot" style="background:${color};width:10px;height:10px;border-radius:3px;flex-shrink:0"></span><span class="leg-pct">${pct}%</span><span class="leg-amt">${fy(e.amount)}</span></div><div class="leg-bar-wrap"><div class="leg-bar" style="width:${pct}%;background:${color}"></div></div>`;
+    item.querySelector('.leg-row').insertBefore(lbl,item.querySelector('.leg-pct'));
+    item.onclick=()=>openPartnerModal(type,i);
+    leg.appendChild(item);
+  });
+}
+
+function openPartnerModal(type,idx){
+  const e=_partnerPieData[type][idx];
+  if(!e)return;
+  document.getElementById('cat-modal-title').textContent=vy+'年 '+(type==='sale'?'売上先':'仕入先・経費先')+' › '+e.label;
+  const body=document.getElementById('cat-modal-body');body.innerHTML='';
+  const keySet=new Set(e.keys);
+  const recs=annualData.filter(r=>r.type===type&&keySet.has(partnerKey(r))).sort((a,b)=>a.date<b.date?-1:1);
+  recs.forEach(r=>{
+    const el=document.createElement('div');el.className='modal-item';
+    const noteEl=document.createElement('span');noteEl.className='modal-note';
+    noteEl.textContent=(e.keys.length>1?(partnerKey(r)+' ･ '):'')+r.category;
+    el.innerHTML=`<span style="font-size:12px;color:#aaa;min-width:40px">${r.date.slice(5).replace('-','/')}</span><span class="modal-amt" style="color:${type==='sale'?'var(--s)':'var(--r)'}">${fy(r.amount)}</span>`;
+    el.insertBefore(noteEl,el.querySelector('.modal-amt'));
+    body.appendChild(el);
+  });
+  document.getElementById('cat-modal-total').textContent=fy(recs.reduce((s,x)=>s+x.amount,0));
+  document.getElementById('cat-modal').classList.add('show');
+}
+
 function renderBarChart(){
   const canvas=document.getElementById('bar-chart');
   const dpr=window.devicePixelRatio||1;
@@ -1997,7 +2123,93 @@ function closeAnnualModal(){
 // ---- Settings UI ----
 function toggleSettings(){document.getElementById('settings-overlay').classList.toggle('show');}
 function closeSettings(){document.getElementById('settings-overlay').classList.remove('show');}
-function toggleDarkMode(){const on=document.getElementById('dark-toggle').checked;document.documentElement.setAttribute('data-theme',on?'dark':'');localStorage.setItem('ur_theme',on?'dark':'light');renderBarChart();}
+function toggleDarkMode(){const on=document.getElementById('dark-toggle').checked;document.documentElement.setAttribute('data-theme',on?'dark':'');localStorage.setItem('ur_theme',on?'dark':'light');renderBarChart();renderPieCharts();renderPartnerPies();}
+
+// ===== Face ID / Touch ID ロック =====
+function isBioLockOn(){return localStorage.getItem('ur_biolock')==='1'&&!!localStorage.getItem('ur_webauthn_id')}
+function initBioLock(){
+  let tog=document.getElementById('biolock-toggle');
+  if(tog)tog.checked=isBioLockOn();
+}
+function bufToB64url(buf){
+  let bytes=new Uint8Array(buf),bin='';
+  for(let b of bytes)bin+=String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64urlToBuf(str){
+  str=str.replace(/-/g,'+').replace(/_/g,'/');
+  while(str.length%4)str+='=';
+  let bin=atob(str),bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return bytes.buffer;
+}
+async function isWebAuthnAvailable(){
+  if(!window.PublicKeyCredential)return false;
+  try{return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();}catch(e){return false;}
+}
+async function registerBiometric(){
+  if(!(await isWebAuthnAvailable())){showToast('この端末ではFace ID / Touch IDが使えません','err');return false;}
+  try{
+    let challenge=crypto.getRandomValues(new Uint8Array(32));
+    let uidBytes=new TextEncoder().encode(userId||'user');
+    let cred=await navigator.credentials.create({publicKey:{
+      challenge,
+      rp:{name:'売上管理',id:location.hostname},
+      user:{id:uidBytes,name:userName||'user',displayName:userName||'user'},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},
+      timeout:60000,
+      attestation:'none'
+    }});
+    if(!cred)return false;
+    localStorage.setItem('ur_webauthn_id',bufToB64url(cred.rawId));
+    return true;
+  }catch(e){showToast('生体認証の登録に失敗しました','err');return false;}
+}
+async function verifyBiometric(){
+  let credId=localStorage.getItem('ur_webauthn_id');
+  if(!credId)return false;
+  try{
+    let challenge=crypto.getRandomValues(new Uint8Array(32));
+    let assertion=await navigator.credentials.get({publicKey:{
+      challenge,
+      allowCredentials:[{id:b64urlToBuf(credId),type:'public-key',transports:['internal']}],
+      userVerification:'required',
+      timeout:60000
+    }});
+    return !!assertion;
+  }catch(e){return false;}
+}
+async function toggleBioLock(){
+  let tog=document.getElementById('biolock-toggle');
+  if(tog.checked){
+    let ok=await registerBiometric();
+    if(ok){localStorage.setItem('ur_biolock','1');showToast('Face ID / Touch IDロックをONにしました','ok');}
+    else{tog.checked=false;}
+  }else{
+    localStorage.removeItem('ur_biolock');
+    showToast('Face ID / Touch IDロックをOFFにしました','info');
+  }
+}
+function lockApp(){
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('lock-screen').style.display='flex';
+  document.getElementById('lock-err').textContent='';
+}
+async function unlockWithBiometric(){
+  document.getElementById('lock-err').textContent='';
+  let ok=await verifyBiometric();
+  if(!ok){document.getElementById('lock-err').textContent='認証に失敗しました。もう一度お試しください';return;}
+  document.getElementById('lock-screen').style.display='none';
+  if(_appLoaded){
+    document.getElementById('app-screen').style.display='block';
+    await refreshAT();
+    load();
+  }else{
+    await startApp();
+  }
+}
 function toggleBarChart(){const on=document.getElementById('chart-toggle').checked;localStorage.setItem('ur_showchart',on?'1':'0');document.getElementById('bar-chart-section').style.display=on?'':'none';}
 function initChartToggle(){const v=localStorage.getItem('ur_showchart');const on=v===null?true:v==='1';document.getElementById('chart-toggle').checked=on;document.getElementById('bar-chart-section').style.display=on?'':'none';}
 function showGuide(){document.getElementById('guide-modal').classList.add('show');}
@@ -2038,7 +2250,7 @@ function initSwipe(){
 // ---- Boot ----
 document.addEventListener('DOMContentLoaded',async()=>{
   const logged=await tryAutoLogin();
-  if(logged){startApp();}
+  if(logged){if(isBioLockOn()){lockApp();}else{startApp();}}
   else{
     document.getElementById('auth-screen').style.display='flex';
     const dark=localStorage.getItem('ur_theme')==='dark'||(localStorage.getItem('ur_theme')===null&&window.matchMedia('(prefers-color-scheme: dark)').matches);
