@@ -691,7 +691,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 </div>
 
 <script>
-const APP_VERSION='1.1.1';
+const APP_VERSION='1.1.2';
 const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
@@ -1696,33 +1696,25 @@ function getJpHolidays(y){
   add(9,nthMon(9,3),'敬老の日');
   add(10,nthMon(10,2),'スポーツの日');
 
-  // 振替休日・国民の休日
+  // 国民の休日（前日も翌日も祝日の日）
   const keys=Object.keys(h).sort();
   const extra={};
+  for(let i=0;i<keys.length-1;i++){
+    const a=new Date(keys[i]+'T00:00:00'), b=new Date(keys[i+1]+'T00:00:00');
+    if((b-a)/86400000===2){
+      const mid=new Date(a);mid.setDate(mid.getDate()+1);
+      const mk=fk(mid.getFullYear(),mid.getMonth(),mid.getDate());
+      if(!h[mk]&&mid.getDay()!==0)extra[mk]='国民の休日';
+    }
+  }
+  // 振替休日（日曜の祝日→その後の最初の「祝日でない日」。連休中は先送り）
   keys.forEach(k=>{
     const dt=new Date(k+'T00:00:00');
-    if(dt.getDay()===0){
-      // 日曜祝日→翌月曜が振替
-      const next=new Date(dt);next.setDate(next.getDate()+1);
-      const nk=fk(next.getFullYear(),next.getMonth(),next.getDate());
-      if(!h[nk]&&!extra[nk])extra[nk]='振替休日';
-    }
-  });
-  // 国民の休日（祝日に挟まれた平日）
-  keys.forEach((k,i)=>{
-    if(i===0||i===keys.length-1)return;
-    const prev=new Date(keys[i-1]+'T00:00:00');
-    const curr=new Date(k+'T00:00:00');
-    const next2=new Date(keys[i+1]+'T00:00:00');
-    const gap1=(curr-prev)/(86400000);
-    const gap2=(next2-curr)/(86400000);
-    if(gap1===2&&gap2===2){
-      const mid=new Date(curr);mid.setDate(mid.getDate()-1);
-      if(mid.getDay()!==0&&mid.getDay()!==6){
-        const mk=fk(mid.getFullYear(),mid.getMonth(),mid.getDate());
-        if(!h[mk]&&!extra[mk])extra[mk]='国民の休日';
-      }
-    }
+    if(dt.getDay()!==0)return;
+    const next=new Date(dt);
+    do{ next.setDate(next.getDate()+1); }while(h[fk(next.getFullYear(),next.getMonth(),next.getDate())]);
+    const nk=fk(next.getFullYear(),next.getMonth(),next.getDate());
+    if(!extra[nk])extra[nk]='振替休日';
   });
   return {...h,...extra};
 }
