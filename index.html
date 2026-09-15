@@ -691,7 +691,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 </div>
 
 <script>
-const APP_VERSION='1.1.3';
+const APP_VERSION='1.1.4';
 const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
@@ -1426,14 +1426,15 @@ function renderSupplierList(){
   });
 }
 
-// 使用回数（今年の記録の備考欄）を種別ごとに集計し、多い順に並べる。
-// 反対の種別でしか使っていない取引先は表示しない。未使用は登録順のまま後ろ（どちらにも表示）
-function sortByUsage(arr,type){
+// 使用回数（今年の記録の備考欄）を「選択中のカテゴリ」ごとに集計し、多い順に並べる。
+// 例：仕入なら仕入の記録で使った取引先だけ。他のカテゴリでしか使っていない取引先は表示しない。
+// どのカテゴリでも未使用の取引先は登録順のまま後ろ（どのカテゴリにも表示）
+function sortByUsage(arr,type,cat){
   const counts={},other={};
   (annualData||[]).forEach(e=>{
     const n=(e.note||'').trim();
     if(!n)return;
-    if(!type||e.type===type)counts[n]=(counts[n]||0)+1;
+    if(e.type===type&&(!cat||e.category===cat))counts[n]=(counts[n]||0)+1;
     else other[n]=(other[n]||0)+1;
   });
   return arr.map((s,i)=>{
@@ -1443,12 +1444,20 @@ function sortByUsage(arr,type){
     .sort((a,b)=>b.c-a.c||a.i-b.i)
     .map(x=>x.s);
 }
+// 記録フォームで選択中のカテゴリ
+function currentCat(){
+  const cs=document.getElementById('cs');
+  return cs?cs.value:'';
+}
 
 function openSupplierPicker(){
   const list=document.getElementById('supplier-picker-list');
-  const items=sortByUsage(suppliers,'buy');
+  const cat=currentCat();
+  const items=sortByUsage(suppliers,'buy',cat);
+  const title=document.querySelector('#supplier-picker-overlay .supplier-picker-title');
+  if(title)title.textContent='🏭 仕入先を選択'+(cat?'（'+cat+'）':'');
   if(!suppliers.length){list.innerHTML='<div class="supplier-empty">仕入先が登録されていません<br><small>設定→仕入先の管理から追加できます</small></div>';}
-  else if(!items.length){list.innerHTML='<div class="supplier-empty">経費で使った仕入先がまだありません<br><small>備考欄に入力して保存すると次から表示されます</small></div>';}
+  else if(!items.length){list.innerHTML='<div class="supplier-empty">「'+cat+'」で使った仕入先がまだありません<br><small>備考欄に入力して保存すると次から表示されます</small></div>';}
   else{
     list.innerHTML='';
     items.forEach(s=>{
@@ -1507,9 +1516,12 @@ function openPickerForType(){
 
 function openBuyerPicker(){
   const list=document.getElementById('buyer-picker-list');
-  const items=sortByUsage(buyers,'sale');
+  const cat=currentCat();
+  const items=sortByUsage(buyers,'sale',cat);
+  const title=document.querySelector('#buyer-picker-overlay .supplier-picker-title');
+  if(title)title.textContent='🛒 売上先を選択'+(cat?'（'+cat+'）':'');
   if(!buyers.length){list.innerHTML='<div class="supplier-empty">売上先が登録されていません<br><small>設定→売上先の管理から追加できます</small></div>';}
-  else if(!items.length){list.innerHTML='<div class="supplier-empty">売上で使った売上先がまだありません<br><small>備考欄に入力して保存すると次から表示されます</small></div>';}
+  else if(!items.length){list.innerHTML='<div class="supplier-empty">「'+cat+'」で使った売上先がまだありません<br><small>備考欄に入力して保存すると次から表示されます</small></div>';}
   else{
     list.innerHTML='';
     items.forEach(s=>{
