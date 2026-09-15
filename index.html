@@ -691,7 +691,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 </div>
 
 <script>
-const APP_VERSION='1.1.2';
+const APP_VERSION='1.1.3';
 const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
@@ -1426,25 +1426,32 @@ function renderSupplierList(){
   });
 }
 
-// 使用回数（今年の記録の備考欄）が多い順。未使用は登録順のまま後ろ
+// 使用回数（今年の記録の備考欄）を種別ごとに集計し、多い順に並べる。
+// 反対の種別でしか使っていない取引先は表示しない。未使用は登録順のまま後ろ（どちらにも表示）
 function sortByUsage(arr,type){
-  const counts={};
+  const counts={},other={};
   (annualData||[]).forEach(e=>{
-    if(type&&e.type!==type)return;
     const n=(e.note||'').trim();
-    if(n)counts[n]=(counts[n]||0)+1;
+    if(!n)return;
+    if(!type||e.type===type)counts[n]=(counts[n]||0)+1;
+    else other[n]=(other[n]||0)+1;
   });
-  return arr.map((s,i)=>({s,i,c:counts[String(s).trim()]||0}))
+  return arr.map((s,i)=>{
+    const k=String(s).trim();
+    return {s,i,c:counts[k]||0,o:other[k]||0};
+  }).filter(x=>x.c>0||x.o===0)
     .sort((a,b)=>b.c-a.c||a.i-b.i)
     .map(x=>x.s);
 }
 
 function openSupplierPicker(){
   const list=document.getElementById('supplier-picker-list');
+  const items=sortByUsage(suppliers,'buy');
   if(!suppliers.length){list.innerHTML='<div class="supplier-empty">仕入先が登録されていません<br><small>設定→仕入先の管理から追加できます</small></div>';}
+  else if(!items.length){list.innerHTML='<div class="supplier-empty">経費で使った仕入先がまだありません<br><small>備考欄に入力して保存すると次から表示されます</small></div>';}
   else{
     list.innerHTML='';
-    sortByUsage(suppliers,'buy').forEach(s=>{
+    items.forEach(s=>{
       const div=document.createElement('div');div.className='supplier-item';
       div.innerHTML='🏭 '+s;
       div.onclick=()=>{document.getElementById('note').value=s;closeSupplierPicker();};
@@ -1500,10 +1507,12 @@ function openPickerForType(){
 
 function openBuyerPicker(){
   const list=document.getElementById('buyer-picker-list');
+  const items=sortByUsage(buyers,'sale');
   if(!buyers.length){list.innerHTML='<div class="supplier-empty">売上先が登録されていません<br><small>設定→売上先の管理から追加できます</small></div>';}
+  else if(!items.length){list.innerHTML='<div class="supplier-empty">売上で使った売上先がまだありません<br><small>備考欄に入力して保存すると次から表示されます</small></div>';}
   else{
     list.innerHTML='';
-    sortByUsage(buyers,'sale').forEach(s=>{
+    items.forEach(s=>{
       const div=document.createElement('div');div.className='supplier-item';
       div.innerHTML='🛒 '+s;
       div.onclick=()=>{document.getElementById('note').value=s;closeBuyerPicker();};
