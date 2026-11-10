@@ -31,6 +31,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
   --text:#222;--text2:#444;--text3:#888;
 }
 .wrap{max-width:480px;margin:0 auto;background:#fff;min-height:100vh;padding-top:160px}
+.bio-hint{margin-top:18px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);text-align:left}
+.bio-hint-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
+.bio-hint ol{padding-left:20px;font-size:13px;color:var(--text2);line-height:1.8}
+.bio-hint-note{font-size:12px;color:var(--text);background:var(--bg);border-radius:8px;padding:6px 8px;margin-bottom:6px;line-height:1.6}
+.bio-hint-sub{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.6}
 #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;background:#fff}
 .auth-logo{font-size:32px;font-weight:700;color:var(--p);margin-bottom:6px}
 .auth-sub{font-size:13px;color:#aaa;margin-bottom:36px}
@@ -190,6 +195,10 @@ html[data-theme="dark"]{
 html[data-theme="dark"] body{background:#111;color:#e2e2e2}
 html[data-theme="dark"] .wrap{background:#111}
 html[data-theme="dark"] #auth-screen{background:#111}
+html[data-theme="dark"] .chart-section-title,html[data-theme="dark"] .annual-title{color:#ccc}
+html[data-theme="dark"] [style*="background:#dcfce7"]{background:var(--sl)!important}
+html[data-theme="dark"] [style*="background:#dbeafe"]{background:var(--pl)!important}
+html[data-theme="dark"] [style*="background:#fef3c7"]{background:var(--ol)!important}
 html[data-theme="dark"] #lock-screen{background:#111}
 html[data-theme="dark"] .auth-field input,
 html[data-theme="dark"] select,
@@ -231,7 +240,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 <div id="auth-screen">
   <div style="width:100%;max-width:360px;margin-bottom:20px;text-align:center">
     <div style="font-size:36px">📦</div>
-    <div style="font-size:22px;font-weight:700;color:#1e40af;margin-bottom:4px">売上・仕入管理</div>
+    <div style="font-size:22px;font-weight:700;color:var(--p);margin-bottom:4px">売上・仕入管理</div>
     <div style="font-size:13px;color:#888">粗利・利益率を自動計算</div>
   </div>
   <div class="auth-logo">📦 売上管理</div>
@@ -242,6 +251,16 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
       <div class="auth-field"><label>パスワード</label><input type="password" id="login-pass" placeholder="パスワード" autocomplete="current-password"></div>
       <button class="auth-btn" id="login-btn" onclick="doLogin()">ログイン</button>
       <div style="font-size:12px;color:var(--text3);margin-top:12px;text-align:center;line-height:1.6">このアプリは招待制です<br>使いたい方は中津留までご連絡ください</div>
+    </div>
+    <div class="bio-hint">
+      <div class="bio-hint-title">🔒 Face IDでかんたんに開けます</div>
+      <div id="bio-hint-registered" class="bio-hint-note" style="display:none">この端末はFace IDを設定済みです。パスワードでログインすると、次からまたFace IDだけで開けます。</div>
+      <ol>
+        <li>最初の1回だけ、メールとパスワードでログイン</li>
+        <li>右上の ⚙️ →「Face ID / Touch IDでロック」をオン</li>
+        <li>次からは、アプリを開いて<b>「Face IDで解除」を押すだけ</b></li>
+      </ol>
+      <div class="bio-hint-sub">※ ログアウトすると、もう一度パスワードが必要になります。ログアウトせずにお使いください。</div>
     </div>
     <div class="auth-err" id="auth-err"></div>
   </div>
@@ -631,35 +650,45 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
       <div style="display:flex;flex-direction:column;gap:10px">
         <div style="background:#dbeafe;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">📝 記録の追加</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">カレンダーの日付をタップして選択し、売上/仕入・カテゴリ・金額・経費先を入力して「追加」を押します。</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">カレンダーの日付をタップして選択し、売上/仕入・カテゴリ・金額・経費先を入力して「追加」を押します。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">💹 粗利・利益率</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">上部バーに売上・仕入・粗利・利益率を常時表示。利益率は30%以上で緑、10〜30%で黄、10%未満で赤になります。</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">上部バーに売上・仕入・粗利・利益率を常時表示。利益率は30%以上で緑、10〜30%で黄、10%未満で赤になります。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">🏭 経費先の保存</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">設定→経費先の管理でよく使う経費先を登録。入力フォームの🏭ボタンからワンタップで入力できます。</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">設定→経費先の管理でよく使う経費先を登録。入力フォームの🏭ボタンからワンタップで入力できます。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">🔄 固定費・売上の設定</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">毎月の固定費（倉庫代・サービス料など）や定期売上を登録すると、その月を表示したときに自動で記録されます。</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">毎月の固定費（倉庫代・サービス料など）や定期売上を登録すると、その月を表示したときに自動で記録されます。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">📊 グラフ・年間収支</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">月別バーチャートで売上・仕入・粗利の推移を確認。カテゴリ別ドーナツグラフや年間表もあります。</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">月別バーチャートで売上・仕入・粗利の推移を確認。カテゴリ別ドーナツグラフや年間表もあります。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">📥📤 CSV インポート/エクスポート</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">エクスポートで全データをCSVとしてダウンロード。インポートは自アプリのCSVまたは会計ソフト（Shift-JIS）形式に対応しています。</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">エクスポートで全データをCSVとしてダウンロード。インポートは自アプリのCSVまたは会計ソフト（Shift-JIS）形式に対応しています。</div>
         </div>
         <div style="background:#fef3c7;border-radius:12px;padding:12px">
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">💡 便利な操作</div>
-          <div style="font-size:13px;color:#555;line-height:1.8"><strong>左右スワイプ</strong>で月を切り替え。<strong>月ラベル</strong>タップで月選択。<strong>年ラベル</strong>タップで年変更。記録をタップすると編集できます。</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8"><strong>左右スワイプ</strong>で月を切り替え。<strong>月ラベル</strong>タップで月選択。<strong>年ラベル</strong>タップで年変更。記録をタップすると編集できます。</div>
         </div>
         <div style="background:#dcfce7;border-radius:12px;padding:12px">
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px">🔒 Face ID / Touch IDロック</div>
-          <div style="font-size:13px;color:#555;line-height:1.8">設定→🔒Face ID / Touch IDでロックをONにすると、次回以降アプリを開くたびに生体認証で解除できます。対応端末でのみ利用でき、ONにした端末ごとの設定です。</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;color:var(--text)">🔒 Face ID / Touch IDロック（おすすめ）</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.8">
+            スマホをなくしても中身を見られないようにする設定です。設定すると、<b>次からはFace IDボタンだけで開けます</b>（パスワード不要）。<br>
+            <b>設定のしかた</b><br>
+            ① 右上の ⚙️ をタップ<br>
+            ② 「Face ID / Touch IDでロック」のスイッチをオン<br>
+            ③ Face IDの確認が出たら、顔（または指）で認証して完了<br>
+            <b>ポイント</b><br>
+            ・ログアウトしなければ、毎回Face IDだけで入れます<br>
+            ・1分以上ほかのアプリを使って戻った時も、Face IDで解除します<br>
+            ・スマホを替えた時は、新しいスマホで一度パスワードでログインして、もう一度オンにしてください
+          </div>
         </div>
       </div>
     </div>
@@ -676,11 +705,11 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
     <div class="modal-body" style="padding:16px">
       <div style="margin-bottom:14px;padding:12px;background:#dbeafe;border-radius:12px">
         <div style="font-size:14px;font-weight:700;margin-bottom:8px">🍎 iPhone（Safari）</div>
-        <div style="font-size:13px;color:#555;line-height:1.8">1. Safariでページを開く<br>2. 共有ボタン（□↑）をタップ<br>3.「ホーム画面に追加」をタップ</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8">1. Safariでページを開く<br>2. 共有ボタン（□↑）をタップ<br>3.「ホーム画面に追加」をタップ</div>
       </div>
       <div style="padding:12px;background:#f0f4ff;border-radius:12px">
         <div style="font-size:14px;font-weight:700;margin-bottom:8px">🤖 Android（Chrome）</div>
-        <div style="font-size:13px;color:#555;line-height:1.8">1. Chromeでページを開く<br>2.「⋮」メニューをタップ<br>3.「ホーム画面に追加」をタップ</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8">1. Chromeでページを開く<br>2.「⋮」メニューをタップ<br>3.「ホーム画面に追加」をタップ</div>
       </div>
     </div>
   </div>
@@ -702,7 +731,10 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 </div>
 
 <script>
-const APP_VERSION='1.1.5';
+// ログイン画面：この端末でFace IDを設定したことがあれば一言表示
+document.addEventListener('DOMContentLoaded',()=>{let el=document.getElementById('bio-hint-registered');if(el&&localStorage.getItem('ur_webauthn_id'))el.style.display='block';});
+
+const APP_VERSION='1.1.6';
 const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
