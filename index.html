@@ -28,6 +28,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;bac
   --o:#d97706;--ol:#fef3c7;
   --b:#2563eb;--bl:#dbeafe;
   --border:#e0e0e0;--bg:#fff;--bg2:#f7f7f7;
+  --text:#222;--text2:#444;--text3:#888;
 }
 .wrap{max-width:480px;margin:0 auto;background:#fff;min-height:100vh;padding-top:160px}
 #auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;background:#fff}
@@ -184,6 +185,7 @@ html[data-theme="dark"]{
   --o:#d97706;--ol:#2d1b00;
   --b:#3b82f6;--bl:#1e3a5f;
   --border:#383838;--bg:#1e1e1e;--bg2:#2a2a2a;
+  --text:#e2e2e2;--text2:#ccc;--text3:#999;
 }
 html[data-theme="dark"] body{background:#111;color:#e2e2e2}
 html[data-theme="dark"] .wrap{background:#111}
@@ -235,20 +237,11 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
   <div class="auth-logo">📦 売上管理</div>
   <div class="auth-sub">シンプルな収支管理</div>
   <div class="auth-box">
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">ログイン</button>
-      <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">新規登録</button>
-    </div>
     <div id="login-form">
       <div class="auth-field"><label>メールアドレス</label><input type="email" id="login-email" placeholder="example@mail.com" autocomplete="email"></div>
       <div class="auth-field"><label>パスワード</label><input type="password" id="login-pass" placeholder="パスワード" autocomplete="current-password"></div>
       <button class="auth-btn" id="login-btn" onclick="doLogin()">ログイン</button>
-    </div>
-    <div id="signup-form" style="display:none">
-      <div class="auth-field"><label>お名前</label><input type="text" id="signup-name" placeholder="例：田中 太郎"></div>
-      <div class="auth-field"><label>メールアドレス</label><input type="email" id="signup-email" placeholder="example@mail.com"></div>
-      <div class="auth-field"><label>パスワード（6文字以上）</label><input type="password" id="signup-pass" placeholder="パスワード"></div>
-      <button class="auth-btn" id="signup-btn" onclick="doSignup()">登録する</button>
+      <div style="font-size:12px;color:var(--text3);margin-top:12px;text-align:center;line-height:1.6">このアプリは招待制です<br>使いたい方は中津留までご連絡ください</div>
     </div>
     <div class="auth-err" id="auth-err"></div>
   </div>
@@ -424,6 +417,24 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 
 
 <!-- 年間明細モーダル（編集・一括削除対応） -->
+<!-- Face IDロックのおすすめ -->
+<div class="modal-overlay" id="bio-suggest-modal">
+  <div class="modal">
+    <div class="modal-body" style="padding:22px 20px 18px;text-align:center">
+      <div style="font-size:44px;line-height:1;margin-bottom:10px">🔒</div>
+      <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:10px">Face IDロックを使いましょう</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.8;text-align:left;margin-bottom:12px">
+        スマホをなくしたり、人に貸したりした時に、売上や取引先の情報を見られないようにする設定です。<br>
+        設定すると、次からは<b>アプリを開いてFace IDボタンを押すだけ</b>で入れます（パスワードの入力は不要）。
+      </div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7;text-align:left;background:var(--bg2);border-radius:10px;padding:10px 12px;margin-bottom:16px">
+        💡 パスワードは<b>他のサイトと同じものを使わない</b>でください。
+      </div>
+      <button class="auth-btn" id="bio-suggest-ok" onclick="acceptBioSuggest()">🔓 今すぐ設定する</button>
+      <button onclick="snoozeBioSuggest()" style="margin-top:10px;width:100%;padding:10px;background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;font-family:inherit">あとで</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="annual-modal" onclick="if(event.target===this)closeAnnualModal()">
   <div class="modal" style="max-height:90vh">
     <div class="modal-header" style="flex-direction:column;gap:6px;padding-bottom:10px">
@@ -691,7 +702,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 </div>
 
 <script>
-const APP_VERSION='1.1.4';
+const APP_VERSION='1.1.5';
 const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
@@ -786,7 +797,7 @@ async function refreshAT(){
     if(d.refresh_token){refreshToken=d.refresh_token;localStorage.setItem('ur_refresh',d.refresh_token);}
     localStorage.setItem('ur_token',accessToken);
     return true;
-  }catch(e){return false;}
+  }catch(e){return null;} // null=通信できなかった（ログインが無効になったわけではない）
 }
 
 async function apiFetch(url,opts){
@@ -794,7 +805,9 @@ async function apiFetch(url,opts){
   let r;
   try{r=await fetch(url,opts);}catch(e){throw Object.assign(new Error('通信エラー'),{offline:true});}
   if(r.status===401||r.status===403){
-    if(await refreshAT()){opts.headers={...opts.headers,...H()};r=await fetch(url,opts);}
+    const ok=await refreshAT();
+    if(ok===null)throw Object.assign(new Error('通信エラー'),{offline:true});
+    if(ok){opts.headers={...opts.headers,...H()};r=await fetch(url,opts);}
   }
   return r;
 }
@@ -830,13 +843,6 @@ document.addEventListener('visibilitychange',async()=>{
 });
 
 // ---- Auth ----
-function switchTab(tab){
-  document.getElementById('login-form').style.display=tab==='login'?'block':'none';
-  document.getElementById('signup-form').style.display=tab==='signup'?'block':'none';
-  document.getElementById('tab-login').className='auth-tab'+(tab==='login'?' active':'');
-  document.getElementById('tab-signup').className='auth-tab'+(tab==='signup'?' active':'');
-  document.getElementById('auth-err').textContent='';
-}
 
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
@@ -852,7 +858,7 @@ async function doLogin(){
     const d=await r.json();
     if(!r.ok){document.getElementById('auth-err').textContent=d.error_description||'ログインに失敗しました';return;}
     accessToken=d.access_token;refreshToken=d.refresh_token;userId=d.user.id;
-    localStorage.setItem('ur_token',accessToken);localStorage.setItem('ur_refresh',refreshToken);
+    localStorage.setItem('ur_token',accessToken);localStorage.setItem('ur_refresh',refreshToken);localStorage.setItem('ur_uid',userId);
     userName=localStorage.getItem('ur_name_'+userId)||d.user.user_metadata?.name||email.split('@')[0];
     localStorage.setItem('ur_name_'+userId,userName);
     if(isBioLockOn()){lockApp();}else{startApp();}
@@ -860,38 +866,11 @@ async function doLogin(){
   finally{btn.disabled=false;btn.textContent='ログイン';}
 }
 
-async function doSignup(){
-  const name=document.getElementById('signup-name').value.trim();
-  const email=document.getElementById('signup-email').value.trim();
-  const pass=document.getElementById('signup-pass').value;
-  const btn=document.getElementById('signup-btn');
-  if(!name||!email||!pass){document.getElementById('auth-err').textContent='すべての項目を入力してください';return;}
-  if(pass.length<6){document.getElementById('auth-err').textContent='パスワードは6文字以上';return;}
-  btn.disabled=true;btn.textContent='登録中...';
-  try{
-    const r=await fetch(SU+'/auth/v1/signup',{
-      method:'POST',headers:{'Content-Type':'application/json','apikey':SK},
-      body:JSON.stringify({email,password:pass,data:{name}})
-    });
-    const d=await r.json();
-    if(!r.ok){document.getElementById('auth-err').textContent=d.error_description||'登録に失敗しました';return;}
-    if(d.access_token){
-      accessToken=d.access_token;refreshToken=d.refresh_token;userId=d.user.id;
-      localStorage.setItem('ur_token',accessToken);localStorage.setItem('ur_refresh',refreshToken);
-      userName=name;
-      if(isBioLockOn()){lockApp();}else{startApp();}
-    } else {
-      document.getElementById('auth-err').style.color='#16a34a';
-      document.getElementById('auth-err').textContent='確認メールを送信しました。リンクをクリック後にログインしてください。';
-    }
-  }catch(e){document.getElementById('auth-err').textContent='通信エラーが発生しました';}
-  finally{btn.disabled=false;btn.textContent='登録する';}
-}
 
 async function doLogout(){
   try{await apiFetch(SU+'/auth/v1/logout',{method:'POST',headers:H()});}catch(e){}
   accessToken=null;refreshToken=null;userId=null;userName='';_appLoaded=false;
-  localStorage.removeItem('ur_token');localStorage.removeItem('ur_refresh');
+  localStorage.removeItem('ur_token');localStorage.removeItem('ur_refresh');localStorage.removeItem('ur_uid');
   data=[];annualData=[];suppliers=[];fixedItems=[];fixedApplied={};
   document.getElementById('app-screen').style.display='none';
   document.getElementById('lock-screen').style.display='none';
@@ -904,11 +883,22 @@ async function tryAutoLogin(){
   if(!token&&!refresh)return false;
   if(token)accessToken=token;
   if(refresh)refreshToken=refresh;
+  let r=null;
   try{
-    let r=await apiFetch(SU+'/auth/v1/user',{headers:H()});
-    if(!r.ok&&refresh){await refreshAT();r=await apiFetch(SU+'/auth/v1/user',{headers:H()});}
-    if(r.ok){const d=await r.json();userId=d.id;userName=localStorage.getItem('ur_name_'+d.id)||d.user_metadata?.name||d.email.split('@')[0];localStorage.setItem('ur_name_'+userId,userName);return true;}
-  }catch(e){}
+    r=await apiFetch(SU+'/auth/v1/user',{headers:H()});
+    if(!r.ok&&r.status<500&&refresh){
+      const ok=await refreshAT();
+      r=(ok===null)?null:await apiFetch(SU+'/auth/v1/user',{headers:H()});
+    }
+  }catch(e){r=null;}
+  // 通信できない・サーバー不調のときは、ログインを外さずに前回の情報で開く
+  if(!r||r.status>=500||r.status===408||r.status===429){
+    const uid=localStorage.getItem('ur_uid');
+    if(!uid)return false;
+    userId=uid;userName=localStorage.getItem('ur_name_'+uid)||'';
+    return true;
+  }
+  if(r.ok){const d=await r.json();userId=d.id;userName=localStorage.getItem('ur_name_'+d.id)||d.user_metadata?.name||d.email.split('@')[0];localStorage.setItem('ur_uid',userId);localStorage.setItem('ur_name_'+userId,userName);return true;}
   return false;
 }
 
@@ -978,6 +968,7 @@ async function startApp(){
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
   checkVersion();
   _appLoaded=true;
+  setTimeout(maybeSuggestBioLock,1500);
 }
 async function checkVersion(){
   try{
@@ -2216,6 +2207,35 @@ async function toggleBioLock(){
     localStorage.removeItem('ur_biolock');
     showToast('Face ID / Touch IDロックをOFFにしました','info');
   }
+}
+// Face IDロック未設定の人に、ログイン後に一度おすすめする（「あとで」は3日後にもう一度だけ）
+async function maybeSuggestBioLock(){
+  if(isBioLockOn())return;
+  let cnt=+(localStorage.getItem('ur_bio_nag')||0);
+  let until=+(localStorage.getItem('ur_bio_nag_until')||0);
+  if(cnt>=2||Date.now()<until)return;
+  if(!(await isWebAuthnAvailable()))return;
+  if(document.getElementById('app-screen').style.display==='none')return;
+  document.getElementById('bio-suggest-modal').classList.add('show');
+}
+async function acceptBioSuggest(){
+  let btn=document.getElementById('bio-suggest-ok');
+  btn.disabled=true;
+  let ok=await registerBiometric();
+  btn.disabled=false;
+  if(ok){
+    localStorage.setItem('ur_biolock','1');
+    initBioLock();
+    document.getElementById('bio-suggest-modal').classList.remove('show');
+    showToast('Face IDロックをONにしました。次からはFace IDで開けます','ok',4000);
+  }
+}
+function snoozeBioSuggest(){
+  let cnt=+(localStorage.getItem('ur_bio_nag')||0)+1;
+  localStorage.setItem('ur_bio_nag',cnt);
+  localStorage.setItem('ur_bio_nag_until',Date.now()+3*24*60*60*1000);
+  document.getElementById('bio-suggest-modal').classList.remove('show');
+  showToast(cnt>=2?'あとからでも ⚙️ →「Face ID / Touch IDでロック」で設定できます':'3日後にもう一度お知らせします','info',4000);
 }
 function lockApp(){
   document.getElementById('app-screen').style.display='none';
