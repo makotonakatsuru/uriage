@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uriage-v1.1.7';
+const CACHE_NAME = 'uriage-v1.1.8';
 const STATIC = ['./'];
 
 self.addEventListener('install', e => {
