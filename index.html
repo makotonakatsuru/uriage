@@ -734,7 +734,7 @@ html[data-theme="dark"] .supplier-item{border-bottom-color:var(--border);color:#
 // ログイン画面：この端末でFace IDを設定したことがあれば一言表示
 document.addEventListener('DOMContentLoaded',()=>{let el=document.getElementById('bio-hint-registered');if(el&&localStorage.getItem('ur_webauthn_id'))el.style.display='block';});
 
-const APP_VERSION='1.1.6';
+const APP_VERSION='1.1.7';
 const VERSION_URL='https://makotonakatsuru.github.io/uriage/version.json';
 const SU='https://rpalacpkyloamikjmtri.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYWxhY3BreWxvYW1pa2ptdHJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzE0MTAsImV4cCI6MjA5MjU0NzQxMH0.3rkBfZyR45vZIzUbUii2hjwQMKSulICzIzFOzSOKZjc';
@@ -2200,11 +2200,11 @@ async function registerBiometric(){
   if(!(await isWebAuthnAvailable())){showToast('この端末ではFace ID / Touch IDが使えません','err');return false;}
   try{
     let challenge=crypto.getRandomValues(new Uint8Array(32));
-    let uidBytes=new TextEncoder().encode(userId||'user');
+    let uidBytes=new TextEncoder().encode('ur:'+(userId||'user'));
     let cred=await navigator.credentials.create({publicKey:{
       challenge,
       rp:{name:'売上管理',id:location.hostname},
-      user:{id:uidBytes,name:userName||'user',displayName:userName||'user'},
+      user:{id:uidBytes,name:(userName||'user')+'（売上管理）',displayName:(userName||'user')+'（売上管理）'},
       pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
       authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},
       timeout:60000,
@@ -2278,7 +2278,7 @@ function lockApp(){
 async function unlockWithBiometric(){
   document.getElementById('lock-err').textContent='';
   let ok=await verifyBiometric();
-  if(!ok){document.getElementById('lock-err').textContent='認証に失敗しました。もう一度お試しください';return;}
+  if(!ok){document.getElementById('lock-err').textContent='認証に失敗しました。もう一度お試しください。何度やってもだめな時は、下の「ログアウトしてやり直す」からパスワードでログインし、設定でFace IDロックを入れ直してください';return;}
   document.getElementById('lock-screen').style.display='none';
   if(_appLoaded){
     document.getElementById('app-screen').style.display='block';
